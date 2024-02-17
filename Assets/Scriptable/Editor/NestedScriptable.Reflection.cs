@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace MBSCore.ScriptableExtensions
+namespace MBSCore.Scriptable
 {
     internal sealed partial class NestedScriptableEditor
     {

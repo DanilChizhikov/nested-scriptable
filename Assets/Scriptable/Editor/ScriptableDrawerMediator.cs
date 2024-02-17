@@ -6,7 +6,7 @@ using UnityEditorInternal;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace MBSCore.ScriptableExtensions
+namespace MBSCore.Scriptable
 {
 	internal abstract class ScriptableDrawerMediator
 	{

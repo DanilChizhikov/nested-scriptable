@@ -1,0 +1,24 @@
+{
+    "name": "com.danilchizhikov.nestedso",
+    "displayName": "Nested Scriptable",
+    "version": "0.0.1",
+    "unity": "2022.3",
+    "description": "Nested ScriptableObjects.",
+    "dependencies": {},
+    "keywords": [
+        "Scriptable",
+        "ScriptableObject",
+        "ScriptableObjects"
+    ],
+    "category": "Tools",
+    "author": "MbsCore",
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:DanilChizhikov/nested-scriptable.git",
+        "directory": "com.danilchizhikov.nestedso"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com/@DanilChizhikov"
+    },
+    "license": "MIT"
+}

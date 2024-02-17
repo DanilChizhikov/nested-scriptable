@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 
-namespace MBSCore.ScriptableExtensions
+namespace MBSCore.Scriptable
 {
     [CustomEditor(typeof(ScriptableObject), true)]
     internal sealed partial class NestedScriptableEditor : Editor

@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
-namespace MBSCore.ScriptableExtensions
+namespace MBSCore.Scriptable
 {
     internal static class ScriptableTypeController<T> where T : ScriptableObject
     {
