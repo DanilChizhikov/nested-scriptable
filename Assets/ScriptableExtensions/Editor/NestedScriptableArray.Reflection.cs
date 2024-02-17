@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MBSCore.ScriptableExtensions
 {
-    internal sealed partial class ScriptableArrayEditor
+    internal sealed partial class NestedScriptableEditor
     {
         private static bool ValidateGenericType(Type checkedType, out Type genericTypes)
         {

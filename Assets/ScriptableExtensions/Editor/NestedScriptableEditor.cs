@@ -9,7 +9,7 @@ using UnityEngine;
 namespace MBSCore.ScriptableExtensions
 {
     [CustomEditor(typeof(ScriptableObject), true)]
-    internal sealed partial class ScriptableArrayEditor : Editor
+    internal sealed partial class NestedScriptableEditor : Editor
     {
         private readonly List<FieldInfo> _fieldInfos = new List<FieldInfo>();
         private readonly Dictionary<FieldInfo, ReorderableList> _listMap = new Dictionary<FieldInfo, ReorderableList>();
@@ -85,7 +85,7 @@ namespace MBSCore.ScriptableExtensions
                 }
 
                 SerializedProperty property = serializedObject.FindProperty(fieldInfo.Name);
-                if (fieldInfo.GetCustomAttributes(typeof(ScriptableArrayAttribute), true).Length > 0)
+                if (fieldInfo.GetCustomAttributes(typeof(NestedScriptableAttribute), true).Length > 0)
                 {
                     _listMap.Add(fieldInfo, CreateList(property, fieldInfo));
                 }

@@ -3,5 +3,5 @@ using System;
 namespace MBSCore.ScriptableExtensions
 {
     [AttributeUsage(AttributeTargets.Field)]
-    public sealed class ScriptableArrayAttribute : Attribute { }
+    public sealed class NestedScriptableAttribute : Attribute { }
 }
