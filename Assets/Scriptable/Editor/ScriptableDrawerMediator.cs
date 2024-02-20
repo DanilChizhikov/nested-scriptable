@@ -54,11 +54,20 @@ namespace MBSCore.Scriptable
 		public ScriptableDrawerMediator(string label, FieldInfo fieldInfo, ReorderableList reorderableList,
 			ScriptableObject scriptableObject) : base(label, fieldInfo, reorderableList, scriptableObject)
 		{
-			reorderableList.drawElementCallback += DrawElement;
 			reorderableList.drawHeaderCallback += DrawHeader;
 			reorderableList.elementHeightCallback += CalculateElementHeight;
+			reorderableList.drawElementCallback += DrawElement;
 			reorderableList.onAddDropdownCallback += ShowDropdownElements;
 			reorderableList.onRemoveCallback += RemoveElement;
+		}
+		
+		private void DrawHeader(Rect rect) =>
+			EditorGUI.LabelField(rect, Label);
+		
+		private float CalculateElementHeight(int index)
+		{
+			float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+			return height;
 		}
 
 		private void DrawElement(Rect rect, int index, bool isActive, bool isFocused)
@@ -69,15 +78,6 @@ namespace MBSCore.Scriptable
 			{
 				DrawNameField(rect, weightWidth, value, usedWidth);
 			}
-		}
-		
-		private void DrawHeader(Rect rect) =>
-			EditorGUI.LabelField(rect, Label);
-		
-		private float CalculateElementHeight(int index)
-		{
-			float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-			return height;
 		}
 		
 		private void ShowDropdownElements(Rect rect, ReorderableList list)
@@ -110,6 +110,39 @@ namespace MBSCore.Scriptable
 			}
 			
 			dropdownMenu.ShowAsContext();
+		}
+		
+		private void RemoveElement(ReorderableList list)
+		{
+			int listCount = list.list.Count;
+			T removedObject = List.list[list.index] as T;
+			var newList = new List<T>(listCount - 1);
+			for (int i = 0; i < listCount; i++)
+			{
+				if (i == list.index)
+				{
+					continue;
+				}
+				
+				newList.Add(list.list[i] as T);
+			}
+			
+			if(list.list is Array)
+			{
+				FieldInfo.SetValue(Target, newList.ToArray());
+			}
+			else
+			{
+				FieldInfo.SetValue(Target, newList);
+			}
+
+			if (removedObject == null)
+			{
+				return;
+			}
+
+			Object.DestroyImmediate(removedObject, true);
+			AssetDatabase.SaveAssets();
 		}
 
 		private T DrawObjectField(Rect rect, float weightWidth, int index, out float usedWidth)
@@ -153,39 +186,6 @@ namespace MBSCore.Scriptable
 			value.name = valueName;
 			AssetDatabase.SaveAssets();
 			EditorGUIUtility.PingObject(value);
-		}
-
-		private void RemoveElement(ReorderableList list)
-		{
-			int listCount = list.list.Count;
-			T removedObject = List.list[list.index] as T;
-			var newList = new List<T>(listCount - 1);
-			for (int i = 0; i < listCount; i++)
-			{
-				if (i == list.index)
-				{
-					continue;
-				}
-				
-				newList.Add(list.list[i] as T);
-			}
-			
-			if(list.list is Array)
-			{
-				FieldInfo.SetValue(Target, newList.ToArray());
-			}
-			else
-			{
-				FieldInfo.SetValue(Target, newList);
-			}
-
-			if (removedObject == null)
-			{
-				return;
-			}
-
-			Object.DestroyImmediate(removedObject, true);
-			AssetDatabase.SaveAssets();
 		}
 	}
 }

@@ -11,10 +11,13 @@ namespace MBSCore.Scriptable
     [CustomEditor(typeof(ScriptableObject), true)]
     internal sealed partial class NestedScriptableEditor : Editor
     {
-        private readonly List<FieldInfo> _fieldInfos = new List<FieldInfo>();
-        private readonly Dictionary<FieldInfo, ReorderableList> _listMap = new Dictionary<FieldInfo, ReorderableList>();
+        private const string ScriptFieldName = "m_Script";
+        
+        private readonly List<FieldInfo> _fieldInfos = new ();
+        private readonly Dictionary<FieldInfo, ReorderableList> _listMap = new ();
         
         private ScriptableObject _target;
+        private SerializedProperty _scriptProperty;
 
         public override void OnInspectorGUI()
         {
@@ -24,12 +27,18 @@ namespace MBSCore.Scriptable
             }
 
             serializedObject.Update();
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.PropertyField(_scriptProperty, false);
+            }
+            
             int fieldInfosCount = _fieldInfos.Count;
             for (int i = 0; i < fieldInfosCount; i++)
             {
                 FieldInfo fieldInfo = _fieldInfos[i];
                 if(!fieldInfo.IsPublic &&
-                   fieldInfo.GetCustomAttributes(typeof(SerializeField), true).Length <= 0)
+                   fieldInfo.GetCustomAttributes(typeof(SerializeField), true).Length <= 0 ||
+                   fieldInfo.GetCustomAttributes(typeof(HideInInspector), true).Length > 0)
                 {
                     continue;
                 }
@@ -68,7 +77,8 @@ namespace MBSCore.Scriptable
             {
                 return;
             }
-            
+
+            _scriptProperty = serializedObject.FindProperty(ScriptFieldName);
             _fieldInfos.Clear();
             _listMap.Clear();
             FieldInfo[] fields = _target.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance |
