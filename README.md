@@ -32,13 +32,15 @@ UPM should now install the package.
 ### How to using
 In order to use it, it is enough to perform the following actions:
 ```csharp
-public class ExampleScriptableCollection : ScriptableObject
+public class ExampleScriptable : ScriptableObject
 {
-    [SerializeField, NestedScriptable] private ExampleScriptable[] _infosArr;
-    [SerializeField, NestedScriptable] private List<ExampleScriptable> _infosList;
+    [SerializeField] private NestedScriptableList<SubScriptable> _subScriptables;
 }
 
-public class ExampleScriptable : ScriptableObject { }
+public class SubScriptable : ScriptableObject
+{
+    [SerializeField] private float _value;
+}
 ```
 
 Very important, nested scriptable only work with ScriptableObjects!
