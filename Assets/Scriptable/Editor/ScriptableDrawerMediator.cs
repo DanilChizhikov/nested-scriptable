@@ -8,12 +8,8 @@ using Object = UnityEngine.Object;
 
 namespace MBSCore.Scriptable
 {
-	internal abstract class ScriptableDrawerMediator
+	internal abstract partial class ScriptableDrawerMediator
 	{
-		private static readonly MethodInfo s_createMediatorGenericMethod =
-			typeof(ScriptableDrawerMediator)
-				.GetMethod(nameof(CreateMediatorGeneric), BindingFlags.Static | BindingFlags.NonPublic);
-		
 		protected string Label { get; }
 		protected FieldInfo FieldInfo { get; }
 		protected ReorderableList List { get; }
@@ -35,12 +31,6 @@ namespace MBSCore.Scriptable
 				.MakeGenericMethod(type)
 				.Invoke(null, new object[] { label, fieldInfo, reorderableList, scriptableObject });
 		}
-
-		private static ScriptableDrawerMediator CreateMediatorGeneric<T>(string label, FieldInfo fieldInfo, ReorderableList reorderableList,
-			ScriptableObject scriptableObject) where T : ScriptableObject
-		{
-			return new ScriptableDrawerMediator<T>(label, fieldInfo, reorderableList, scriptableObject);
-		}
 	}
 
 	internal sealed class ScriptableDrawerMediator<T> : ScriptableDrawerMediator where T : ScriptableObject
@@ -51,9 +41,12 @@ namespace MBSCore.Scriptable
 		private const float SumWeight = ObjectWeight + NameWeight;
 		private const float ColumnSpace = 6f;
 
+		private readonly Dictionary<T, Editor> _editorsMap;
+
 		public ScriptableDrawerMediator(string label, FieldInfo fieldInfo, ReorderableList reorderableList,
 			ScriptableObject scriptableObject) : base(label, fieldInfo, reorderableList, scriptableObject)
 		{
+			_editorsMap = new Dictionary<T, Editor>();
 			reorderableList.drawHeaderCallback += DrawHeader;
 			reorderableList.elementHeightCallback += CalculateElementHeight;
 			reorderableList.drawElementCallback += DrawElement;
@@ -67,6 +60,13 @@ namespace MBSCore.Scriptable
 		private float CalculateElementHeight(int index)
 		{
 			float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+			var element = List.list[index] as T;
+			Editor editor = GetEditor(element);
+			if (GetOptimizedGUIBlock(editor, false, true, out float editorHeight))
+			{
+				height += editorHeight;
+			}
+			
 			return height;
 		}
 
@@ -77,6 +77,17 @@ namespace MBSCore.Scriptable
 			if (value != null)
 			{
 				DrawNameField(rect, weightWidth, value, usedWidth);
+				Editor editor = GetEditor(value);
+				if (!GetOptimizedGUIBlock(editor, false, true, out float height))
+				{
+					return;
+				}
+				
+				Rect editorRect = rect;
+				editorRect.y += EditorGUIUtility.singleLineHeight;
+				editorRect.height = height + EditorGUIUtility.singleLineHeight;
+				GUI.changed = true;
+				OnOptimizedInspectorGUI(editor, editorRect);
 			}
 		}
 		
@@ -186,6 +197,18 @@ namespace MBSCore.Scriptable
 			value.name = valueName;
 			AssetDatabase.SaveAssets();
 			EditorGUIUtility.PingObject(value);
+		}
+
+		private Editor GetEditor(T element)
+		{
+			if (_editorsMap.TryGetValue(element, out Editor editor))
+			{
+				return editor;
+			}
+			
+			editor = Editor.CreateEditor(element, s_editorDefaultType);
+			_editorsMap.Add(element, editor);
+			return editor;
 		}
 	}
 }

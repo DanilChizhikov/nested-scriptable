@@ -55,11 +55,6 @@ namespace MBSCore.Scriptable
 
             return null;
         }
-
-        private static bool Validate(Type type)
-        {
-            return !type.IsAbstract && s_processingType.IsAssignableFrom(type);
-        }
         
         private static Type[] GetAssignableTypes(Type baseType)
         {
