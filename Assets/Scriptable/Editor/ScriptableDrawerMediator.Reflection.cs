@@ -36,9 +36,9 @@ namespace MBSCore.Scriptable
         }
         
         private static ScriptableDrawerMediator CreateMediatorGeneric<T>(string label, FieldInfo fieldInfo, ReorderableList reorderableList,
-            ScriptableObject scriptableObject) where T : ScriptableObject
+            ScriptableObject scriptableObject, SerializedProperty rootProperty) where T : ScriptableObject
         {
-            return new ScriptableDrawerMediator<T>(label, fieldInfo, reorderableList, scriptableObject);
+            return new ScriptableDrawerMediator<T>(label, fieldInfo, reorderableList, scriptableObject, rootProperty);
         }
     }
 }

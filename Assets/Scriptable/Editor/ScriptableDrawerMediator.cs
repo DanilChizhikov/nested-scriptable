@@ -16,7 +16,7 @@ namespace MBSCore.Scriptable
 		protected ScriptableObject Target { get; }
 
 		public ScriptableDrawerMediator(string label, FieldInfo fieldInfo, ReorderableList reorderableList,
-			ScriptableObject scriptableObject)
+			ScriptableObject scriptableObject, SerializedProperty rootProperty)
 		{
 			Label = label;
 			FieldInfo = fieldInfo;
@@ -25,11 +25,11 @@ namespace MBSCore.Scriptable
 		}
 
 		public static void CreateMediator(string label, FieldInfo fieldInfo, Type type, ReorderableList reorderableList,
-			ScriptableObject scriptableObject)
+			ScriptableObject scriptableObject, SerializedProperty rootProperty)
 		{
 			s_createMediatorGenericMethod
 				.MakeGenericMethod(type)
-				.Invoke(null, new object[] { label, fieldInfo, reorderableList, scriptableObject });
+				.Invoke(null, new object[] { label, fieldInfo, reorderableList, scriptableObject, rootProperty });
 		}
 	}
 
@@ -42,11 +42,14 @@ namespace MBSCore.Scriptable
 		private const float ColumnSpace = 6f;
 
 		private readonly Dictionary<T, Editor> _editorsMap;
+		private readonly Dictionary<int, bool> _expandedMap;
 
 		public ScriptableDrawerMediator(string label, FieldInfo fieldInfo, ReorderableList reorderableList,
-			ScriptableObject scriptableObject) : base(label, fieldInfo, reorderableList, scriptableObject)
+			ScriptableObject scriptableObject, SerializedProperty rootProperty) :
+			base(label, fieldInfo, reorderableList, scriptableObject, rootProperty)
 		{
 			_editorsMap = new Dictionary<T, Editor>();
+			_expandedMap = new Dictionary<int, bool>();
 			reorderableList.drawHeaderCallback += DrawHeader;
 			reorderableList.elementHeightCallback += CalculateElementHeight;
 			reorderableList.drawElementCallback += DrawElement;
@@ -60,11 +63,15 @@ namespace MBSCore.Scriptable
 		private float CalculateElementHeight(int index)
 		{
 			float height = EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
-			var element = List.list[index] as T;
-			Editor editor = GetEditor(element);
-			if (GetOptimizedGUIBlock(editor, false, true, out float editorHeight))
+			bool isExpanded = _expandedMap.GetValueOrDefault(index, false);
+			if (isExpanded)
 			{
-				height += editorHeight;
+				var element = List.list[index] as T;
+				Editor editor = GetEditor(element);
+				if (GetOptimizedGUIBlock(editor, false, true, out float editorHeight))
+				{
+					height += editorHeight;
+				}
 			}
 			
 			return height;
@@ -72,11 +79,15 @@ namespace MBSCore.Scriptable
 
 		private void DrawElement(Rect rect, int index, bool isActive, bool isFocused)
 		{
+			bool isExpanded = _expandedMap.GetValueOrDefault(index, false);
 			float weightWidth = (rect.width - EditorGUIUtility.labelWidth - ColumnSpace) / SumWeight;
+			isExpanded = EditorGUI.BeginFoldoutHeaderGroup(rect, isExpanded, string.Format(ElementTemplate, index));
+			rect.x += EditorGUIUtility.labelWidth;
+			rect.width -= EditorGUIUtility.labelWidth;
 			T value = DrawObjectField(rect, weightWidth, index, out float usedWidth);
-			if (value != null)
+			DrawNameField(rect, weightWidth, value, usedWidth);
+			if (isExpanded)
 			{
-				DrawNameField(rect, weightWidth, value, usedWidth);
 				Editor editor = GetEditor(value);
 				if (!GetOptimizedGUIBlock(editor, false, true, out float height))
 				{
@@ -84,11 +95,16 @@ namespace MBSCore.Scriptable
 				}
 				
 				Rect editorRect = rect;
-				editorRect.y += EditorGUIUtility.singleLineHeight;
+				editorRect.x -= EditorGUIUtility.labelWidth;
+				editorRect.width += EditorGUIUtility.labelWidth;
+				editorRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 				editorRect.height = height + EditorGUIUtility.singleLineHeight;
 				GUI.changed = true;
 				OnOptimizedInspectorGUI(editor, editorRect);
 			}
+			
+			EditorGUI.EndFoldoutHeaderGroup();
+			_expandedMap[index] = isExpanded;
 		}
 		
 		private void ShowDropdownElements(Rect rect, ReorderableList list)
@@ -164,14 +180,13 @@ namespace MBSCore.Scriptable
 			{
 				return null;
 			}
-			
+
 			Rect elementRect = rect;
 			elementRect.height = EditorGUIUtility.singleLineHeight;
-			elementRect.width = weightWidth * ObjectWeight + EditorGUIUtility.labelWidth;
+			elementRect.width = weightWidth * ObjectWeight;
 			using (new EditorGUI.DisabledScope(true))
 			{
-				value = EditorGUI.ObjectField(elementRect, new GUIContent(string.Format(ElementTemplate, index)),
-					value, typeof(T), false) as T;
+				value = EditorGUI.ObjectField(elementRect, string.Empty, value, typeof(T), false) as T;
 			}
 
 			usedWidth = elementRect.width;

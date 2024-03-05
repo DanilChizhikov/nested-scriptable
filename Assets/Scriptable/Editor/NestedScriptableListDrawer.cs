@@ -9,7 +9,6 @@ namespace MBSCore.Scriptable
     [CustomPropertyDrawer(typeof(NestedScriptableList<>))]
     internal sealed class NestedScriptableListDrawer : PropertyDrawer
     {
-        private const float CreateFieldRightOffset = 100f;
         private const string ErrorMessage = "NestedScriptableList can only be used within the inheritors of ScriptableObject";
         private const float ErrorMessageHeight = 25f;
 
@@ -48,8 +47,8 @@ namespace MBSCore.Scriptable
             
             ValidateGenericType(fieldInfo.FieldType, out Type listArgumentType);
             IList list = fieldInfo.GetValue(property.serializedObject.targetObject) as IList;
-            _list = new ReorderableList(list, listArgumentType, true, true, true, true); 
-            ScriptableDrawerMediator.CreateMediator(property.displayName, fieldInfo, listArgumentType, _list, targetObject);
+            _list = new ReorderableList(list, listArgumentType, true, true, true, true);
+            ScriptableDrawerMediator.CreateMediator(property.displayName, fieldInfo, listArgumentType, _list, targetObject, property);
         }
         
         private static void ValidateGenericType(Type checkedType, out Type genericTypes)
