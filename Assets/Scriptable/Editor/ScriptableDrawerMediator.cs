@@ -16,7 +16,7 @@ namespace MBSCore.Scriptable
 		protected ScriptableObject Target { get; }
 
 		public ScriptableDrawerMediator(string label, FieldInfo fieldInfo, ReorderableList reorderableList,
-			ScriptableObject scriptableObject, SerializedProperty rootProperty)
+			ScriptableObject scriptableObject)
 		{
 			Label = label;
 			FieldInfo = fieldInfo;
@@ -25,11 +25,11 @@ namespace MBSCore.Scriptable
 		}
 
 		public static void CreateMediator(string label, FieldInfo fieldInfo, Type type, ReorderableList reorderableList,
-			ScriptableObject scriptableObject, SerializedProperty rootProperty)
+			ScriptableObject scriptableObject)
 		{
 			s_createMediatorGenericMethod
 				.MakeGenericMethod(type)
-				.Invoke(null, new object[] { label, fieldInfo, reorderableList, scriptableObject, rootProperty });
+				.Invoke(null, new object[] { label, fieldInfo, reorderableList, scriptableObject });
 		}
 	}
 
@@ -45,8 +45,8 @@ namespace MBSCore.Scriptable
 		private readonly Dictionary<int, bool> _expandedMap;
 
 		public ScriptableDrawerMediator(string label, FieldInfo fieldInfo, ReorderableList reorderableList,
-			ScriptableObject scriptableObject, SerializedProperty rootProperty) :
-			base(label, fieldInfo, reorderableList, scriptableObject, rootProperty)
+			ScriptableObject scriptableObject) :
+			base(label, fieldInfo, reorderableList, scriptableObject)
 		{
 			_editorsMap = new Dictionary<T, Editor>();
 			_expandedMap = new Dictionary<int, bool>();
@@ -81,6 +81,7 @@ namespace MBSCore.Scriptable
 		{
 			bool isExpanded = _expandedMap.GetValueOrDefault(index, false);
 			float weightWidth = (rect.width - EditorGUIUtility.labelWidth - ColumnSpace) / SumWeight;
+			rect.height = EditorGUIUtility.singleLineHeight;
 			isExpanded = EditorGUI.BeginFoldoutHeaderGroup(rect, isExpanded, string.Format(ElementTemplate, index));
 			rect.x += EditorGUIUtility.labelWidth;
 			rect.width -= EditorGUIUtility.labelWidth;
@@ -93,7 +94,7 @@ namespace MBSCore.Scriptable
 				{
 					return;
 				}
-				
+
 				Rect editorRect = rect;
 				editorRect.x -= EditorGUIUtility.labelWidth;
 				editorRect.width += EditorGUIUtility.labelWidth;

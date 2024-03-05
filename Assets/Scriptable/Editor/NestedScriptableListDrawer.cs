@@ -48,7 +48,7 @@ namespace MBSCore.Scriptable
             ValidateGenericType(fieldInfo.FieldType, out Type listArgumentType);
             IList list = fieldInfo.GetValue(property.serializedObject.targetObject) as IList;
             _list = new ReorderableList(list, listArgumentType, true, true, true, true);
-            ScriptableDrawerMediator.CreateMediator(property.displayName, fieldInfo, listArgumentType, _list, targetObject, property);
+            ScriptableDrawerMediator.CreateMediator(property.displayName, fieldInfo, listArgumentType, _list, targetObject);
         }
         
         private static void ValidateGenericType(Type checkedType, out Type genericTypes)
