@@ -35,7 +35,6 @@ namespace MBSCore.Scriptable
 
 	internal sealed class ScriptableDrawerMediator<T> : ScriptableDrawerMediator where T : ScriptableObject
 	{
-		private const string ElementTemplate = "Element {0}";
 		private const float ObjectWeight = 1f;
 		private const float NameWeight = 1f;
 		private const float SumWeight = ObjectWeight + NameWeight;
@@ -70,7 +69,7 @@ namespace MBSCore.Scriptable
 				Editor editor = GetEditor(element);
 				if (GetOptimizedGUIBlock(editor, false, true, out float editorHeight))
 				{
-					height += editorHeight;
+					height += editorHeight + EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 				}
 			}
 			
@@ -79,32 +78,35 @@ namespace MBSCore.Scriptable
 
 		private void DrawElement(Rect rect, int index, bool isActive, bool isFocused)
 		{
+			T element = List.list[index] as T;
+			if (element == null)
+			{
+				return;
+			}
+			
 			bool isExpanded = _expandedMap.GetValueOrDefault(index, false);
-			float weightWidth = (rect.width - EditorGUIUtility.labelWidth - ColumnSpace) / SumWeight;
 			rect.height = EditorGUIUtility.singleLineHeight;
-			isExpanded = EditorGUI.BeginFoldoutHeaderGroup(rect, isExpanded, string.Format(ElementTemplate, index));
-			rect.x += EditorGUIUtility.labelWidth;
-			rect.width -= EditorGUIUtility.labelWidth;
-			T value = DrawObjectField(rect, weightWidth, index, out float usedWidth);
-			DrawNameField(rect, weightWidth, value, usedWidth);
+			isExpanded = EditorGUI.Foldout(rect, isExpanded, element.name);
 			if (isExpanded)
 			{
-				Editor editor = GetEditor(value);
+				float weightWidth = (rect.width - ColumnSpace) / SumWeight;
+				rect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
+				rect.height = EditorGUIUtility.singleLineHeight;
+				float usedWidth = DrawObjectField(rect, weightWidth, ref element);
+				DrawNameField(rect, weightWidth, element, usedWidth);
+				Editor editor = GetEditor(element);
 				if (!GetOptimizedGUIBlock(editor, false, true, out float height))
 				{
 					return;
 				}
 
 				Rect editorRect = rect;
-				editorRect.x -= EditorGUIUtility.labelWidth;
-				editorRect.width += EditorGUIUtility.labelWidth;
 				editorRect.y += EditorGUIUtility.singleLineHeight + EditorGUIUtility.standardVerticalSpacing;
 				editorRect.height = height + EditorGUIUtility.singleLineHeight;
 				GUI.changed = true;
 				OnOptimizedInspectorGUI(editor, editorRect);
 			}
 			
-			EditorGUI.EndFoldoutHeaderGroup();
 			_expandedMap[index] = isExpanded;
 		}
 		
@@ -173,25 +175,17 @@ namespace MBSCore.Scriptable
 			AssetDatabase.SaveAssets();
 		}
 
-		private T DrawObjectField(Rect rect, float weightWidth, int index, out float usedWidth)
+		private float DrawObjectField(Rect rect, float weightWidth, ref T element)
 		{
-			usedWidth = -1;
-			T value = List.list[index] as T;
-			if (value == null)
-			{
-				return null;
-			}
-
 			Rect elementRect = rect;
 			elementRect.height = EditorGUIUtility.singleLineHeight;
 			elementRect.width = weightWidth * ObjectWeight;
 			using (new EditorGUI.DisabledScope(true))
 			{
-				value = EditorGUI.ObjectField(elementRect, string.Empty, value, typeof(T), false) as T;
-			}
-
-			usedWidth = elementRect.width;
-			return value;
+				element = EditorGUI.ObjectField(elementRect, string.Empty, element, typeof(T), false) as T;
+			} 
+			
+			return elementRect.width;
 		}
 
 		private void DrawNameField(Rect rect, float weightWidth, T value, float usedWidth)
