@@ -144,28 +144,8 @@ namespace MBSCore.Scriptable
 		
 		private void RemoveElement(ReorderableList list)
 		{
-			int listCount = list.list.Count;
 			T removedObject = List.list[list.index] as T;
-			var newList = new List<T>(listCount - 1);
-			for (int i = 0; i < listCount; i++)
-			{
-				if (i == list.index)
-				{
-					continue;
-				}
-				
-				newList.Add(list.list[i] as T);
-			}
-			
-			if(list.list is Array)
-			{
-				FieldInfo.SetValue(Target, newList.ToArray());
-			}
-			else
-			{
-				FieldInfo.SetValue(Target, newList);
-			}
-
+			list.list.RemoveAt(list.index);
 			if (removedObject == null)
 			{
 				return;
